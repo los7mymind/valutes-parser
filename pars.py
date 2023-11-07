@@ -1,14 +1,18 @@
+# Импорт необходимых библиотек и модулей
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
 from writing_in_db import insert_data_into_database_cbrf, insert_data_into_database_rambler, insert_data_into_database_investing
 
+
+# Функция для асинхронного получения HTML-кода страницы по URL-адресу
 async def fetch_url(url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             return await response.text()
         
 
+# Функция для парсинга данных о валюте с Центрального банка России (CBRF)
 async def cbrf(html, soup):
     temp = soup.find_all("tr", class_="")
     data_to_insert = []
@@ -18,8 +22,8 @@ async def cbrf(html, soup):
         data_to_insert.append((item[1], item[3], item[4]))
     insert_data_into_database_cbrf(data_to_insert)
 
-    
-    
+
+# Функция для парсинга данных о валюте с ресурса "Rambler"
 async def rambler(html, soup):
     temp = soup.find_all("a", class_="finance-currency-table__tr")
     data_to_insert = []
@@ -31,6 +35,7 @@ async def rambler(html, soup):
     insert_data_into_database_rambler(data_to_insert)
 
 
+# Функция для парсинга данных о валюте с ресурса "Investing.com"
 async def investing(html, soup):
     temp = soup.find_all("tr", class_="datatable_row__Hk3IV dynamic-table_row__fdxP8")
     
@@ -43,11 +48,14 @@ async def investing(html, soup):
     insert_data_into_database_investing(data_to_insert)
 
 
+# Функция для асинхронного выполнения парсинга данных для указанного URL-адреса
 async def parse_page(url: str):
     while True:
-        html = await fetch_url(url=url)
-        soup = BeautifulSoup(html, "lxml")
+        html = await fetch_url(url=url) # Получаем HTML-код страницы
+        soup = BeautifulSoup(html, "lxml") # Создаем объект BeautifulSoup для парсинга HTML
 
+        
+        # Определяем, какую функцию вызывать в зависимости от URL
         if url == "https://cbr.ru/curreNcy_base/daily/":
             await cbrf(html=html, soup=soup)
         elif url == "https://ru.investing.com/currencies/single-currency-crosses":
@@ -55,6 +63,6 @@ async def parse_page(url: str):
         elif url == "https://finance.rambler.ru/currencies/":
             await rambler(html=html, soup=soup)
 
-        await asyncio.sleep(60)
+        await asyncio.sleep(60) # Ожидание перед следующим запросом
    
     
