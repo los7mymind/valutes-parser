@@ -2,7 +2,7 @@
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
-from writing_in_db import insert_data_into_database_cbrf, insert_data_into_database_rambler, insert_data_into_database_investing
+from writing_in_db import insert_data_into_database_cbrf, insert_data_into_database_rambler, insert_data_into_database_investing, insert_data_into_database_investing_for_graph
 
 
 # Функция для асинхронного получения HTML-кода страницы по URL-адресу
@@ -40,12 +40,16 @@ async def investing(html, soup):
     temp = soup.find_all("tr", class_="datatable_row__Hk3IV dynamic-table_row__fdxP8")
     
     data_to_insert = []
-
+    data_to_insert_for_graph_table = []
+    
     for item in temp:
         data = item.stripped_strings
         data_list = list(data)
         data_to_insert.append(data_list)
+        data_to_insert_for_graph_table.append((data_list[0], data_list[2]))
     insert_data_into_database_investing(data_to_insert)
+    insert_data_into_database_investing_for_graph(data_to_insert_for_graph_table)
+    
 
 
 # Функция для асинхронного выполнения парсинга данных для указанного URL-адреса
